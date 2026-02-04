@@ -22,6 +22,10 @@ public class GurobiSolver extends Solver {
     private double epsilon1;
     private BigDecimal[] best_weights;
     private long solver_time;
+    private int program_count;
+    private int node_count;
+    private int fake_leaf_count;
+    private int leaf_count;
     
     /** 
      * @param tuples All tuples of a relation
@@ -479,6 +483,8 @@ public class GurobiSolver extends Solver {
     */
     private int optimize_node(Treenode n, int k) throws GRBException {
         if (n.left == null) {
+            leaf_count++;
+            
             long start = System.currentTimeMillis();
             model = new GRBModel(env);
             model.set(GRB.IntParam.LogToConsole, 0);
@@ -511,6 +517,7 @@ public class GurobiSolver extends Solver {
             }
 
             model.optimize();
+            program_count++;
             solver_time += System.currentTimeMillis() - start;
             
             int status = model.get(GRB.IntAttr.Status);
@@ -532,6 +539,28 @@ public class GurobiSolver extends Solver {
                 }
 
                 model.dispose();
+
+                for (int i = 0; i < win_inequalities.size(); i++) {
+                    BigDecimal value = new BigDecimal(0.0);
+                    for (int j = 0; j < num_attributes; j++) {
+                        value = value.add(weights[j].multiply(new BigDecimal(win_inequalities.get(i).get(j))));
+                    }
+                    if (value.compareTo(new BigDecimal(0.0)) == -1) {
+                        fake_leaf_count++;
+                        return error;
+                    }
+                }
+
+                for (int i = 0; i < lose_inequalities.size(); i++) {
+                    BigDecimal value = new BigDecimal(0.0);
+                    for (int j = 0; j < num_attributes; j++) {
+                        value = value.add(weights[j].multiply(new BigDecimal(lose_inequalities.get(i).get(j))));
+                    }
+                    if (value.compareTo(new BigDecimal(0.0)) == 1) {
+                        fake_leaf_count++;
+                        return error;
+                    }
+                }
 
                 return error;
             } else {
@@ -582,9 +611,15 @@ public class GurobiSolver extends Solver {
                 return;
             }
             add_hyperplane(root, inequalities.get(i), k);
+            System.out.println("Number of programs: " + program_count);
+            System.out.println("Number of nodes: " + node_count);
         }
         error = num_tuples * k;
         optimize_node(root, k);
+        System.out.println("Number of programs: " + program_count);
+        System.out.println("Number of nodes: " + node_count);
+        System.out.println("Number of leaf nodes: " + leaf_count);
+        System.out.println("Number of fake leaf nodes: " + fake_leaf_count);
         weights = best_weights;
         System.out.print("Weight: ");
         for (int i = 0; i < weights.length; i++) {

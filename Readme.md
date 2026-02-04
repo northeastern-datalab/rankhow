@@ -1,7 +1,11 @@
 # RankHow Project
 
 This repository provides an implementation of the framework for RankHow problems.
-Both the Java code for formal method based solutions and Python code for linear regression and AdaRank is included to reproduce the experiments for the RankHoww paper.
+Both the Java code for formal method based solutions and Python code for linear regression and AdaRank is included to reproduce the experiments for the RankHow paper.
+
+## Latest Update to Include the experimental code for numerical imprecision
+
+The code for the experiments in Sections 3.2 and 4.4 in the paper is `Experiment_numerical.java`.
 
 ## Programming Language and Dependencies
 
