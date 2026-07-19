@@ -1,13 +1,15 @@
 # RankHow Project
 
-This repository provides an implementation of the framework for RankHow problems.
+This repository provides an implementation of the framework for the solutions for the RankHow problems in the ICDE 2025 paper "Synthesizing Scoring Functions for Rankings Using Symbolic Gradient Descent".
 Both the Java code for formal method based solutions and Python code for linear regression and AdaRank is included to reproduce the experiments for the RankHow paper.
 
-## Latest Update to Include the experimental code for numerical imprecision
+## Latest update to include the experimental code for numerical imprecision
 
-The code for the experiments in Sections 3.2 and 4.4 in the paper is `Experiment_numerical.java`.
+The experiments correpsond to the EDBT 2027 paper "The Dangerous Impact of Solver Imprecision on Data Management Techniques (and How to Avoid it)".
+The code for the experiments in Sections 5.2 and 5.3 in the paper is `Experiment_numerical.java`.
+We tested the experiments with gurobi 13.0.0.
 
-## Programming Language and Dependencies
+## Programming language and dependencies
 
 The source code of RankHow is written in Java, tested on JDK 18 and 11. 
 
@@ -15,7 +17,7 @@ This project uses [Maven](https://maven.apache.org/index.html) to manage librari
 
 The Python code for the experiments is tested on Python 3.8.10, 3.10.4.
 
-## Required Libraries
+## Required libraries
 
 The required external libraries, together with the version tested, are:
 - Javatuples 1.2
