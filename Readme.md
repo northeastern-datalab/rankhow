@@ -5,8 +5,7 @@ Both the Java code for formal method based solutions and Python code for linear 
 
 ## Latest update to include the experimental code for numerical imprecision
 
-The experiments correpsond to the EDBT 2027 paper "The Dangerous Impact of Solver Imprecision on Data Management Techniques (and How to Avoid it)".
-The code for the experiments in Sections 5.2 and 5.3 in the paper is `Experiment_numerical.java`.
+The code `Experiment_numerical.java` correpsonds to the experiments in Sections 5.2 and 5.3 in the EDBT 2027 paper "The Dangerous Impact of Solver Imprecision on Data Management Techniques (and How to Avoid it)".
 We tested the experiments with gurobi 13.0.0.
 
 ## Programming language and dependencies
@@ -56,7 +55,7 @@ The CSRankings dataset we used is not provided here due to its license.
 
 ## Acknowledgement
 
-Some code for the database parser and the tuple and relation data structure are originally from the [any-k repository](https://github.com/northeastern-datalab/anyk-code) by [Nikos Tziavelis](https://ntzia.github.io/).
+Some code for the database parser and the tuple and relation data structure are originally from the [any-k repository](https://github.com/northeastern-datalab/anyk-code) by Prof. [Nikos Tziavelis](https://ntzia.github.io/).
 Thank you Nikos for sharing your code!
 
 The NBA data were obtained on February 17, 2024, from the great baseketball stats and history website [Basketball Reference](https://www.basketball-reference.com/).
