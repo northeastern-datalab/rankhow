@@ -21,7 +21,7 @@ public class CellFinder {
     /** 
      * @param tuples All tuples of a relation
      * @param given_ranking The given ranking
-     * @param gap A gap for dealing with numerical issues
+     * @param gap A gap for strict wins
     */
     public CellFinder (ArrayList<Tuple> tuples, int[] given_ranking, double gap) {
         this.tuples = tuples;

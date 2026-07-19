@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import gurobi.GRBException;
+import com.gurobi.gurobi.GRBException;
 import wny.entities.Relation;
 import wny.entities.Tuple;
 import wny.solver.GurobiSolver;
@@ -15,7 +15,7 @@ import wny.util.RankingMeasurer;
  * An experiment class which contains experiments in the RankHow paper
  * @author Zixuan Chen
 */
-public class Experiment {
+public class Experiment_numerical {
      /** 
      * Get tuples to rank from a relation
      * @param relation All original tuples in the given relation
@@ -36,151 +36,8 @@ public class Experiment {
     }
     
     /** 
-     * Experiment: how frequent are numerical issues and fix
-     * Corresponding to Sections 3.2 and 4.4
-    */
-    public static void numerical() throws GRBException, IOException {
-        int count1 = 0, count2 = 0, error1 = 0, error2 = 0, execution_time1 = 0, execution_time2 = 0, perfect1 = 0, perfect2 = 0, min = 100, max = 0;
-
-        for (int i = 1; i <= 100; i++) {
-            String input_file = "data/per/" + i + ".csv";
-            DatabaseParser db_parser = new DatabaseParser(null);
-            List<Relation> database = db_parser.parse_file(input_file);
-            Relation relation = database.get(0);
-            
-            int[] given_ranking = relation.getRankingfromScore();
-
-            // By default n is the relation size, m is 5, k is 5
-            int n = relation.get_size();
-            int m = 5;
-            int k = 5;
-            double gap = 5 * 1e-4;
-            GurobiSolver gs;
-
-            System.out.println("k: " + k + ", n: " + n + ", m: " + m);
-            System.out.println("-");
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
-
-            long start = System.currentTimeMillis();
-            gs.optimize_position(k, 0);
-            execution_time1 += System.currentTimeMillis() - start;
-            RankingMeasurer rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
-            System.out.println("Error: " + rm.error(k));
-            if (rm.error(k) != gs.getError()) {
-                System.out.println("Numerical issue!");
-                count1++;
-            }
-            error1 += rm.error(k);
-            if (rm.error(k) == 0) perfect1++;
-            System.out.println();
-
-            System.out.println("+");
-            gap = 1e-15;
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
-
-            start = System.currentTimeMillis();
-            gs.optimize_position(k, 0);
-            execution_time2 += System.currentTimeMillis() - start;
-            RankingMeasurer rm2 = new RankingMeasurer(gs.getRanking(k), given_ranking);
-            System.out.println("Error: " + rm2.error(k));
-            if (rm2.error(k) != gs.getError()) {
-                System.out.println("Numerical issue!");
-                count2++;
-            }
-            error2 += rm2.error(k);
-            if (rm2.error(k) == 0) perfect2++;
-            System.out.println();
-
-            int difference = rm2.error(k) - rm.error(k);
-            if (difference < min) {
-                min = difference;
-            }
-            if (difference > max) {
-                max = difference;
-            }
-        }
-        
-        System.out.println("NBA data: RankHow+ " + count1 + " error " + error1 + " execution time " + execution_time1 + " perfect ranking: " + perfect1);
-        System.out.println("NBA data: RankHow- " + count2 + " error " + error2 + " execution time " + execution_time2 + " perfect ranking: " + perfect2);
-        System.out.println("Extra error: " + min + ' ' + (double) (error2 - error1) / 100 + ' ' + max);
-        System.out.println("Execution time: " + (double) execution_time2 / execution_time1);
-
-        count1 = 0;
-        count2 = 0;
-        error1 = 0;
-        error2 = 0;
-        execution_time1 = 0;
-        execution_time2 = 0;
-        perfect1 = 0;
-        perfect2 = 0;
-
-        for (int i = 1; i <= 100; i++) {
-            String input_file = "data/csrankings/" + i + ".csv";
-            DatabaseParser db_parser = new DatabaseParser(null);
-            List<Relation> database = db_parser.parse_file(input_file);
-            Relation relation = database.get(0);
-            
-            int[] given_ranking = relation.getRankingfromScore();
-
-            // By default n is the relation size, m is 5, k is 5
-            int n = relation.get_size();
-            int m = 5;
-            int k = 5;
-            double gap = 1e-2;
-            GurobiSolver gs;
-
-            System.out.println("k: " + k + ", n: " + n + ", m: " + m);
-            System.out.println("-");
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
-
-            long start = System.currentTimeMillis();
-            gs.optimize_position(k, 0);
-            execution_time1 += System.currentTimeMillis() - start;
-            RankingMeasurer rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
-            System.out.println("Error: " + rm.error(k));
-            if (rm.error(k) != gs.getError()) {
-                System.out.println("Numerical issue!");
-                count1++;
-            }
-            if (rm.error(k) == 0) perfect1++;
-            error1 += rm.error(k);
-            System.out.println();
-
-            System.out.println("+");
-            gap = 1e-15;
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
-
-            start = System.currentTimeMillis();
-            gs.optimize_position(k, 0);
-            execution_time2 += System.currentTimeMillis() - start;
-            RankingMeasurer rm2 = new RankingMeasurer(gs.getRanking(k), given_ranking);
-            System.out.println("Error: " + rm2.error(k));
-            if (rm2.error(k) != gs.getError()) {
-                System.out.println("Numerical issue!");
-                count2++;
-            }
-            error2 += rm2.error(k);
-            if (rm2.error(k) == 0) perfect2++;
-            System.out.println();
-
-            int difference = rm2.error(k) - rm.error(k);
-            if (difference < min) {
-                min = difference;
-            }
-            if (difference > max) {
-                max = difference;
-            }
-        }
-        
-        System.out.println("CSRankings data: RankHow+ " + count1 + " error " + error1 + " execution time " + execution_time1 + " perfect ranking: " + perfect1);
-        System.out.println("CSRankings data: RankHow- " + count2 + " error " + error2 + " execution time " + execution_time2 + " perfect ranking: " + perfect2);
-        System.out.println("Extra error: " + min + ' ' + (double) (error2 - error1) / 100 + ' ' + max);
-        System.out.println("Execution time: " + (double) execution_time2 / execution_time1);
-    }
-
-    /** 
-     * Experiment: impact on scalability
-     * Corresponding to Section 3.2
+     * Experiment: impact on ranking problems
+     * Corresponding to Section 5.2
     */
     public static void case_study() throws GRBException {
         String input_file = "data/mvp_small.csv";
@@ -197,7 +54,7 @@ public class Experiment {
         int m = 8;
         int k = 8;
 
-        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4);
+        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2);
         
         long start, end;
         RankingMeasurer rm;
@@ -213,7 +70,7 @@ public class Experiment {
         System.out.println("Running time: " + (end - start) + "ms");
         System.out.println();
 
-        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 0);
+        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 0);
 
         start = System.currentTimeMillis();
         gs.optimize_tree(k, 0);
@@ -223,7 +80,7 @@ public class Experiment {
         System.out.println("Running time: " + (end - start) + "ms");
         System.out.println();
 
-        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4);
+        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2);
 
         start = System.currentTimeMillis();
         gs.optimize_tree(k, 0);
@@ -234,12 +91,255 @@ public class Experiment {
         System.out.println();
     }
 
+    /** 
+     * Experiment: effectiveness of gap
+     * Corresponding to Section 5.3 Table 1
+    */
+    public static void numerical(String data) throws GRBException, IOException {
+        int count[] = new int[4], error[] = new int[4], execution_time[] = new int[4];
+
+        System.out.println("Experiment on " + data);
+
+        for (int i = 1; i <= 100; i++) {
+            String input_file = "data/" + data + "/" + i + ".csv";
+            DatabaseParser db_parser = new DatabaseParser(null);
+            List<Relation> database = db_parser.parse_file(input_file);
+            Relation relation = database.get(0);
+            
+            int[] given_ranking = relation.getRankingfromScore();
+
+            // By default n is the relation size, m is 5, k is 5
+            int n = relation.get_size();
+            int m = 5;
+            int k = 5;
+
+            double epsilon1 = 1e-15, precision = 1e-3;
+            GurobiSolver gs;
+
+            System.out.println("Dataset " + i);
+            System.out.println("Precision is " + precision);
+
+            System.out.println("Original");
+            System.out.println("Gap is " + epsilon1);
+            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, epsilon1); 
+            long start = System.currentTimeMillis();
+            gs.optimize_position(k, 0);
+            execution_time[0] += System.currentTimeMillis() - start;
+            RankingMeasurer rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
+            if (rm.error(k) != gs.getError()) {
+                System.out.println("Numerical issue!");
+                count[0]++;
+            }
+            error[0] += rm.error(k);
+            System.out.println("Error for original: " + rm.error(k));
+            System.out.println();
+        
+            System.out.println("One parameter");
+
+            int j = 0, best = 100;
+            boolean correct = false;
+            // for (epsilon1 = 1e-10; epsilon1 <= 1e-1; epsilon1 *= Math.pow(10, 0.1)) {
+            for (epsilon1 = 1e-10; epsilon1 <= 1e-1; epsilon1 *= 10) {
+                System.out.println("Epsilon is " + epsilon1);
+                gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, epsilon1); 
+
+                start = System.currentTimeMillis();
+                gs.optimize_position(k, 0);
+                execution_time[1] += System.currentTimeMillis() - start;
+                rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
+                System.out.println("Error: " + rm.error(k));
+                System.out.println();
+
+                if (correct) {
+                    if (rm.error(k) < best && rm.error(k) == gs.getError()) best = rm.error(k);
+                } else {
+                    if (rm.error(k) == gs.getError()) {
+                        correct = true;
+                        best = rm.error(k);
+                    } else {
+                        if (rm.error(k) < best) best = rm.error(k);
+                    }
+                }
+                j++;
+            }
+            System.out.println("Error for one parameter: " + best);
+            if (!correct) {
+                count[1]++;
+                System.out.println("Numerical issue!");
+            }
+            error[1] += best;
+            System.out.println("Number of programs: " + j);
+            System.out.println();
+
+            System.out.println("Two parameters");
+
+            j = 0;
+            best = 100;
+            correct = false;
+            for (epsilon1 = 1e-10; epsilon1 <= 1e-1; epsilon1 *= 10) {
+                for (double epsilon2 = 1e-10; epsilon2 <= 1e-1; epsilon2 *= 10) {
+                    System.out.println("Epsilon1 is " + epsilon1 + " epsilon2 is " + epsilon2);
+                    gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, epsilon1, epsilon2); 
+
+                    start = System.currentTimeMillis();
+                    gs.optimize_position(k, 0);
+                    execution_time[2] += System.currentTimeMillis() - start;
+                    rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
+                    System.out.println("Error: " + rm.error(k));
+                    System.out.println();
+
+                    if (correct) {
+                        if (rm.error(k) < best && rm.error(k) == gs.getError()) best = rm.error(k);
+                    } else {
+                        if (rm.error(k) == gs.getError()) {
+                            correct = true;
+                            best = rm.error(k);
+                        } else {
+                            if (rm.error(k) < best) best = rm.error(k);
+                        }
+                    }
+                    j++;
+                }
+            }
+            System.out.println("Error for two parameters: " + best);
+            if (!correct) {
+                count[2]++;
+                System.out.println("Numerical issue!");
+            }
+            error[2] += best;
+            System.out.println("Number of programs: " + j);
+            System.out.println();
+
+            
+            System.out.println("Adaptive");
+            int depth = 0;
+            j = 0;
+            best = 100;
+            correct = false;
+            double min = 1e-10;
+            double max = 1e-1;
+            double best_epsilon = 0; 
+            double grid_size = 10;
+            while (depth < 3) {
+                for (epsilon1 = min; epsilon1 <= max; epsilon1 *= grid_size) {
+                    System.out.println("Epsilon is " + epsilon1);
+                    gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, epsilon1); 
+
+                    start = System.currentTimeMillis();
+                    gs.optimize_position(k, 0);
+                    execution_time[3] += System.currentTimeMillis() - start;
+                    rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
+                    System.out.println("Error: " + rm.error(k));
+                    System.out.println();
+
+                    if (correct) {
+                        if (rm.error(k) == gs.getError()) {
+                            if (rm.error(k) < best) {
+                                best = rm.error(k);
+                                best_epsilon = epsilon1;
+                            } else if (rm.error(k) == best && epsilon1 < best_epsilon) {
+                                best_epsilon = epsilon1;
+                            }
+                        }
+                        
+                    } else {
+                        if (rm.error(k) == gs.getError()) {
+                            correct = true;
+                            best = rm.error(k);
+                            best_epsilon = epsilon1;
+                        } else {
+                            if (rm.error(k) < best) {
+                                best = rm.error(k);
+                                best_epsilon = epsilon1;
+                            } else if (rm.error(k) == best && epsilon1 < best_epsilon) {
+                                best_epsilon = epsilon1;
+                            }
+                        }
+                    }
+                    j++;
+                }
+                System.out.println("Best epsilon is " + best_epsilon + " in round " + ++depth);
+                max = best_epsilon;
+                min = max / grid_size;
+                grid_size = Math.pow(max / min, 0.1);
+            }
+            System.out.println("Error for adptive one parameter: " + best);
+            if (!correct) {
+                count[3]++;
+                System.out.println("Numerical issue!");
+            }
+            error[3] += best;
+            System.out.println("Number of programs: " + j);
+            System.out.println();
+        }
+
+        for (int j = 0; j < 4; j++) {
+            System.out.println(data + " data: " + count[j] + " error " + (double) error[j] / 100 + " execution time " + (double) execution_time[j] / 100);
+        }
+    }
+
+    /** 
+     * Experiment: impact of the gap parameter
+     * Corresponding to Section 5.3 Figure 3
+    */
+    public static void impact(String data) throws GRBException, IOException {
+        int count[] = new int[10], error[] = new int[10];
+
+        System.out.println("Experiment on " + data);
+
+        for (int i = 1; i <= 100; i++) {
+            String input_file = "data/" + data + "/" + i + ".csv";
+            DatabaseParser db_parser = new DatabaseParser(null);
+            List<Relation> database = db_parser.parse_file(input_file);
+            Relation relation = database.get(0);
+            
+            int[] given_ranking = relation.getRankingfromScore();
+
+            // By default n is the relation size, m is 5, k is 5
+            int n = relation.get_size();
+            int m = 5;
+            int k = 5;
+
+            double precision = 1e-3;
+            GurobiSolver gs;
+    
+
+            int j = 0;
+            for (double epsilon1 = 1e-10; epsilon1 <= 1e-1; epsilon1 *= 10) {
+                System.out.println("Epsilon is " + epsilon1);
+                gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, epsilon1); 
+
+                gs.optimize_position(k, 0);
+                RankingMeasurer rm = new RankingMeasurer(gs.getRanking(k), given_ranking);
+                error[j] += rm.error(k);
+                System.out.println("Error: " + rm.error(k));
+                if (rm.error(k) != gs.getError()) {
+                    count[j]++;
+                    System.out.println("Numerical issue!");
+                }
+                System.out.println();
+
+                j++;
+            }
+        }
+
+        for (int j = 0; j < 10; j++) {
+            System.out.println(data + " data: " + count[j] + " error " + (double) error[j] / 100);
+        }
+    }
+
     public static void main(String args[]) throws Exception 
     {
-        System.out.println("Experiment: Numerical issues and fix");
-        numerical();
-
         System.out.println("Experiment: Impact on scalability");
         case_study();
+        
+        System.out.println("Experiment: Numerical issues and fix on CSRankings data");
+        numerical("csrankings");
+
+        System.out.println("Experiment: Numerical issues and fix on NBA data");
+        numerical("per");
+
+        System.out.println("Experiment: Impact of gap parameters");
+        impact("csrankings");
     }
 }

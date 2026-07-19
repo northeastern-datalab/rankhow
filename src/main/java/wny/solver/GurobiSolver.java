@@ -3,7 +3,7 @@ package wny.solver;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-import gurobi.*;
+import com.gurobi.gurobi.*;
 
 import wny.entities.Constraint;
 import wny.entities.Treenode;
@@ -19,7 +19,8 @@ public class GurobiSolver extends Solver {
     private GRBEnv env;
     private GRBModel model;
 
-    private double epsilon1;
+    private double epsilon;
+    private double extra_epsilon;
     private BigDecimal[] best_weights;
     private long solver_time;
     private int program_count;
@@ -30,11 +31,31 @@ public class GurobiSolver extends Solver {
     /** 
      * @param tuples All tuples of a relation
      * @param given_ranking
-     * @param gap A gap for dealing with numerical issues
+     * @param precision A threshold for ties
     */
-    public GurobiSolver(ArrayList<Tuple> tuples, int[] given_ranking, double gap) {
-        super(tuples, given_ranking, gap);
-        epsilon1 = gap;
+    public GurobiSolver(ArrayList<Tuple> tuples, int[] given_ranking, double precision, double epsilon) {
+        super(tuples, given_ranking, precision);
+        this.epsilon = epsilon;
+        extra_epsilon = epsilon;
+        program_count = 0;
+        node_count = 1;
+        fake_leaf_count = 0;
+        leaf_count = 0;
+    }
+
+    /** 
+     * @param tuples All tuples of a relation
+     * @param given_ranking
+     * @param precision A threshold for ties
+    */
+    public GurobiSolver(ArrayList<Tuple> tuples, int[] given_ranking, double precision, double epsilon, double extra_epsilon) {
+        super(tuples, given_ranking, precision);
+        this.epsilon = epsilon;
+        this.extra_epsilon = extra_epsilon;
+        program_count = 0;
+        node_count = 1;
+        fake_leaf_count = 0;
+        leaf_count = 0;
     }
     
     /** 
@@ -171,9 +192,9 @@ public class GurobiSolver extends Solver {
                 int j = Integer.parseInt(pair[1]);
 
                 boolean solver_indicator = v.get(GRB.DoubleAttr.X) > 0.99 ? true : false;
-                boolean verified_indicator = scores[j].subtract(scores[i]).compareTo(new BigDecimal(gap).divide(new BigDecimal(2))) > 0.99 ? true : false;
+                boolean verified_indicator = scores[j].subtract(scores[i]).compareTo(new BigDecimal(precision)) > 0.99 ? true : false;
                 if (solver_indicator != verified_indicator) {
-                    System.out.println("Numerical issues found in indicator verification");
+                    System.out.println("Numerical issues found in indicator verification" + i + ' ' + j);
                 }
             }
         }
@@ -213,15 +234,18 @@ public class GurobiSolver extends Solver {
             GRBLinExpr sum_expr = new GRBLinExpr();
             for (int j = 0; j < num_tuples; j++) {
                 if (i != j) {
-                    int comparison = tuples.get(i).isDominating(tuples.get(j), gap);
+                    int comparison = tuples.get(i).isDominating(tuples.get(j), precision + epsilon);
                     if (comparison == 0) {
                         GRBVar indicator = model.addVar(0, 1, 0.0, GRB.BINARY, "indicator" + i + ' ' + j);
                         expr = new GRBLinExpr();
                         for (int l = 0; l < num_attributes; l++) {
                             expr.addTerm(Double.valueOf(tuples.get(j).values[l + 1]) - Double.valueOf(tuples.get(i).values[l + 1]), W[l]);
                         }
-                        model.addGenConstrIndicator(indicator, 1, expr, GRB.GREATER_EQUAL, epsilon1, "win_inequality" + i + ' ' + j);
-                        model.addGenConstrIndicator(indicator, 0, expr, GRB.LESS_EQUAL, 0, "lose_inequality" + i + ' ' + j);
+                        model.addGenConstrIndicator(indicator, 1, expr, GRB.GREATER_EQUAL, precision + epsilon, "win_inequality" + i + ' ' + j);
+                        // Used for one parameter
+                        // model.addGenConstrIndicator(indicator, 0, expr, GRB.LESS_EQUAL, precision - epsilon, "lose_inequality" + i + ' ' + j);
+                        // Used for two parameters
+                        model.addGenConstrIndicator(indicator, 0, expr, GRB.LESS_EQUAL, precision - extra_epsilon, "lose_inequality" + i + ' ' + j);
                         sum_expr.addTerm(1, indicator);
                     } else if (comparison == 1) {
                         num_dominatees++;
@@ -290,7 +314,7 @@ public class GurobiSolver extends Solver {
                     }
                 
                     expr.addTerm(1, penalty);
-                    model.addConstr(expr, GRB.GREATER_EQUAL, epsilon1, "inequality" + i + ' ' + j);
+                    model.addConstr(expr, GRB.GREATER_EQUAL, epsilon, "inequality" + i + ' ' + j);
                     objective.addTerm(1, penalty);
                 } else if (given_ranking[i] == given_ranking[j]) {
                     GRBVar penalty = model.addVar(0, GRB.INFINITY, 0.0, GRB.CONTINUOUS, "penalty" + i + ' ' + j);
@@ -352,7 +376,7 @@ public class GurobiSolver extends Solver {
             optimize_score(k);
             point = getWeights();
         } else if (cell_selection == 2) {
-            CellFinder cf = new CellFinder(tuples, given_ranking, gap);
+            CellFinder cf = new CellFinder(tuples, given_ranking, precision + epsilon);
             point = cf.find(k, cell_size);
         }
         build_cell(point, cell_size);
@@ -435,7 +459,7 @@ public class GurobiSolver extends Solver {
                 Double c = win_inequalities.get(i).get(j);
                 expr.addTerm(c, W[j]);
             }
-            model.addConstr(expr, GRB.GREATER_EQUAL, epsilon1, "win_constraint" + i);
+            model.addConstr(expr, GRB.GREATER_EQUAL, epsilon, "win_constraint" + i);
         }
         for (int i = 0; i < lose_inequalities.size(); i++) {
             expr = new GRBLinExpr();
@@ -443,7 +467,7 @@ public class GurobiSolver extends Solver {
                 Double c = lose_inequalities.get(i).get(j);
                 expr.addTerm(c, W[j]);
             }
-            model.addConstr(expr, GRB.LESS_EQUAL, -epsilon1, "lose_constraint" + i);
+            model.addConstr(expr, GRB.LESS_EQUAL, -epsilon, "lose_constraint" + i);
         }
 
         expr = new GRBLinExpr();
@@ -453,6 +477,7 @@ public class GurobiSolver extends Solver {
         model.addConstr(expr, GRB.EQUAL, 0, "equal_constraint"); 
 
         model.optimize();
+        program_count++;
         solver_time += System.currentTimeMillis() - start;
 
         int status = model.get(GRB.IntAttr.Status);
@@ -467,6 +492,7 @@ public class GurobiSolver extends Solver {
 
                 n.left = left;
                 n.right = right;
+                node_count += 2;
             } else {
                 add_hyperplane(n.left, inequality, k);
                 add_hyperplane(n.right, inequality, k);
@@ -505,7 +531,7 @@ public class GurobiSolver extends Solver {
                     Double c = win_inequalities.get(i).get(j);
                     expr.addTerm(c, W[j]);
                 }
-                model.addConstr(expr, GRB.GREATER_EQUAL, epsilon1, "win_constraint" + i);
+                model.addConstr(expr, GRB.GREATER_EQUAL, epsilon, "win_constraint" + i);
             }
             for (int i = 0; i < lose_inequalities.size(); i++) {
                 expr = new GRBLinExpr();
@@ -513,7 +539,7 @@ public class GurobiSolver extends Solver {
                     Double c = lose_inequalities.get(i).get(j);
                     expr.addTerm(c, W[j]);
                 }
-                model.addConstr(expr, GRB.LESS_EQUAL, -epsilon1, "lose_constraint" + i);
+                model.addConstr(expr, GRB.LESS_EQUAL, -epsilon, "lose_constraint" + i);
             }
 
             model.optimize();

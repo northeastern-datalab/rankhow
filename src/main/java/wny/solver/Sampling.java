@@ -19,10 +19,10 @@ public class Sampling extends Solver {
     /** 
      * @param tuples All tuples of a relation
      * @param given_ranking The given ranking
-     * @param gap A gap for dealing with numerical issues
+     * @param precision A threshold for ties
     */
-    public Sampling(ArrayList<Tuple> tuples, int[] given_ranking, double gap) {
-        super(tuples, given_ranking, gap);
+    public Sampling(ArrayList<Tuple> tuples, int[] given_ranking, double precision) {
+        super(tuples, given_ranking, precision);
     }
 
     /** 
@@ -52,7 +52,7 @@ public class Sampling extends Solver {
                 sample_ranking[scores.get(i).getValue1()] = i + 1;
                 BigDecimal score = scores.get(i).getValue0();
                 for (int j = i - 1; j >= 0; j--) {
-                    if (scores.get(j).getValue0().subtract(score).compareTo(new BigDecimal(gap).divide(new BigDecimal(2))) == -1) {
+                    if (scores.get(j).getValue0().subtract(score).compareTo(new BigDecimal(precision)) == -1) {
                         sample_ranking[scores.get(i).getValue1()]--;
                     } else {
                         break;

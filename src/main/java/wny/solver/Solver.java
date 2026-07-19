@@ -24,18 +24,18 @@ public class Solver {
     protected int[] ranking;
     protected int[] given_ranking;
     protected ArrayList<Constraint> constraints;
-    protected double gap;
+    protected double precision;
     protected int error;
 
     /** 
      * @param tuples All tuples of a relation
      * @param given_ranking The given ranking
-     * @param gap A gap for dealing with numerical issues
+     * @param precision A threshold for ties
     */
-    public Solver (ArrayList<Tuple> tuples, int[] given_ranking, double gap) {
+    public Solver (ArrayList<Tuple> tuples, int[] given_ranking, double precision) {
         this.tuples = tuples;
         this.given_ranking = given_ranking;
-        this.gap = gap;
+        this.precision = precision;
         num_attributes = tuples.get(0).values.length - 1;
         num_tuples = tuples.size();
         compute_standard_deviation();
@@ -160,7 +160,7 @@ public class Solver {
 
         Collections.sort(scores, Comparator.reverseOrder());
 
-        BigDecimal center = new BigDecimal(gap).divide(new BigDecimal(2));
+        BigDecimal p = new BigDecimal(precision);
 
         int count = 0;
         for (int i = 0; i < num_tuples; i++) {
@@ -168,7 +168,7 @@ public class Solver {
                 ranking[scores.get(i).getValue1()] = i + 1;
                 BigDecimal score = scores.get(i).getValue0();
                 for (int j = i - 1; j >= 0; j--) {
-                    if (scores.get(j).getValue0().subtract(score).compareTo(center) == -1) {
+                    if (scores.get(j).getValue0().subtract(score).compareTo(p) == -1) {
                         ranking[scores.get(i).getValue1()]--;
                     } else {
                         break;

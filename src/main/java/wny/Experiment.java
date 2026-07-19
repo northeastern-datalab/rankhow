@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import gurobi.GRBException;
+import com.gurobi.gurobi.GRBException;
 import wny.data.Generator;
 import wny.entities.Constraint;
 import wny.entities.Relation;
@@ -71,7 +71,7 @@ public class Experiment {
         int[] indices = {0,3,4,5,6,7};
         relation.project(indices);
 
-        GurobiSolver gs = new GurobiSolver(relation.getAll(), given_ranking, 1e-4);
+        GurobiSolver gs = new GurobiSolver(relation.getAll(), given_ranking, 1e-4 / 2, 1e-4 / 2);
         
         long start, end;
         RankingMeasurer rm;
@@ -112,7 +112,7 @@ public class Experiment {
         int n = relation.get_size();
         int m = 2;
 
-        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4);
+        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2);
         
         long start, end;
         RankingMeasurer rm;
@@ -149,7 +149,7 @@ public class Experiment {
         int m = 8;
         int k = 13;
 
-        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4);
+        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2);
         
         long start, end;
         RankingMeasurer rm;
@@ -191,13 +191,14 @@ public class Experiment {
         int n = relation.get_size();
         int m = 5;
         int k = 6;
-        double gap = 1e-4;
+        double precision = 1e-4 / 2;
+        double gap = 1e-4 / 2;
         GurobiSolver gs;
         Sampling s;
         RankingMeasurer rm;
 
         System.out.println("k: " + k + ", n: " + n + ", m: " + m);
-        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap);
+        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, gap);
         s = new Sampling(getTuples(relation.getAll(), n, m), given_ranking, gap);
         
         System.out.println("RankHow-OPT");
@@ -272,7 +273,8 @@ public class Experiment {
         int n = relation.get_size();
         int m = 5;
         int k = 5;
-        double gap = 1e-4;
+        double precision = 1e-4 / 2;
+        double gap = 1e-4 / 2;
         GurobiSolver gs;
         Sampling s;
         int[][] result;
@@ -282,7 +284,7 @@ public class Experiment {
         for (int i = 1; i <= 5; i++) {
             int num_tuples = (i == 5)? relation.get_size() : i * 5000;
             System.out.println("k: " + k + ", n: " + num_tuples + ", m: " + m);
-            gs = new GurobiSolver(getTuples(relation.getAll(), num_tuples, m), given_ranking, gap); 
+            gs = new GurobiSolver(getTuples(relation.getAll(), num_tuples, m), given_ranking, precision, gap); 
             s = new Sampling(getTuples(relation.getAll(), num_tuples, m), given_ranking, gap);
 
             System.out.println("RankHow-OPT");
@@ -338,7 +340,7 @@ public class Experiment {
         result = new int[3][5];
         for (int i = 4; i <= 8; i++) {
             System.out.println("k: " + k + ", n: " + n + ", m: " + i);
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, i), given_ranking, gap); 
+            gs = new GurobiSolver(getTuples(relation.getAll(), n, i), given_ranking, precision, gap); 
             s = new Sampling(getTuples(relation.getAll(), n, i), given_ranking, gap);
 
             System.out.println("RankHow");
@@ -393,7 +395,7 @@ public class Experiment {
         System.out.println("Vary k on NBA data");
         result = new int[3][5];
         for (int i = 2; i <= 6; i ++) {
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
+            gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, gap); 
             s = new Sampling(getTuples(relation.getAll(), n, m), given_ranking, gap);
             System.out.println("k: " + i + ", n: " + n + ", m: " + m);
 
@@ -464,7 +466,8 @@ public class Experiment {
         int n = relation.get_size();
         int m = 5;
         int k = 5;
-        double gap = 1e-2;
+        double precision = 1e-2 / 2;
+        double gap = 1e-2 / 2;
         GurobiSolver gs;
         Sampling s;
         int[][] result;
@@ -474,7 +477,7 @@ public class Experiment {
         for (int i = 1; i <= 7; i++) {
             int num_tuples = (i == 7)? relation.get_size() : i * 100;
             System.out.println("k: " + k + ", n: " + num_tuples + ", m: " + m);
-            gs = new GurobiSolver(getTuples(relation.getAll(), num_tuples, m), given_ranking, gap); 
+            gs = new GurobiSolver(getTuples(relation.getAll(), num_tuples, m), given_ranking, precision, gap); 
             s = new Sampling(getTuples(relation.getAll(), num_tuples, m), given_ranking, gap);
 
             System.out.println("RankHow");
@@ -519,7 +522,7 @@ public class Experiment {
         for (int i = 1; i <= 6; i++) {
             int num_attributes = (i == 6)? 27 : i * 5;
             System.out.println("k: " + k + ", n: " + n + ", m: " + num_attributes);
-            gs = new GurobiSolver(getTuples(relation.getAll(), n, num_attributes), given_ranking, gap); 
+            gs = new GurobiSolver(getTuples(relation.getAll(), n, num_attributes), given_ranking, precision, gap); 
             s = new Sampling(getTuples(relation.getAll(), n, num_attributes), given_ranking, gap);
 
             System.out.println("RankHow");
@@ -559,7 +562,7 @@ public class Experiment {
         write(result, "result/csrankings_error_m_opt.csv");
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
-        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, gap); 
+        gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, precision, gap); 
         s = new Sampling(getTuples(relation.getAll(), n, m), given_ranking, gap);
         System.out.println("Vary k on CSRankings data");
         result = new int[3][5];
@@ -622,8 +625,8 @@ public class Experiment {
         int[][] result = new int[5][10];
 
         System.out.println("Numerical issue correction experiments with k from 1 to 10");
-        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4);
-        GurobiSolver gs2 = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-10);
+        GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2);
+        GurobiSolver gs2 = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-10/2 , 1e-10 / 2);
         for (int i = 1; i <= 10; i++) {
             System.out.println("k: " + i + ", n: " + n + ", m: " + m);
             result[0][i - 1] = i;
@@ -706,7 +709,7 @@ public class Experiment {
         result = new int[2][10];
 
         for (int i = 1; i <= 10; i++) {
-            GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4); 
+            GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), n, m), given_ranking, 1e-4 / 2, 1e-4 / 2); 
             double cell_size = i * 0.001;
             System.out.println("k: " + k + ", n: " + n + ", m: " + m + ", cell size: " + cell_size);
 
@@ -769,7 +772,7 @@ public class Experiment {
                 given_ranking[i] = k + 1;
             }
             
-            GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), 1000000, 5), given_ranking, 1e-5);
+            GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), 1000000, 5), given_ranking, 1e-5 / 2, 1e-5 / 2);
             start = System.currentTimeMillis();
             gs.optimize_gradient_descent(k, 0.01, 0, 1);
             end = System.currentTimeMillis();
@@ -832,7 +835,7 @@ public class Experiment {
                     given_ranking[j] = 11;
                 }
                 
-                GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), 1000000, 5 * l), given_ranking, 1e-5);
+                GurobiSolver gs = new GurobiSolver(getTuples(relation.getAll(), 1000000, 5 * l), given_ranking, 1e-5 / 2, 1e-5 / 2);
                 start = System.currentTimeMillis();
                 gs.optimize_gradient_descent(k, 0.01, 0, 1);
                 end = System.currentTimeMillis();

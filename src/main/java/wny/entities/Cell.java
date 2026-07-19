@@ -79,7 +79,7 @@ public class Cell implements Comparable<Cell> {
      * @param tuples All tuples of a relation
      * @param given_ranking The given ranking
      * @param k
-     * @param gap A gap for dealing with numerical issues
+     * @param gap A gap for strict wins
      * @return a pair of upper bound and lower bound for the cell
     */
     public Pair<Integer, Integer> getBounds(ArrayList<Tuple> tuples, int[] given_ranking, int k, double gap) {
